@@ -1,6 +1,8 @@
 from .models import Poll, Choice, Vote
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from rest_framework.authtoken.models import Token
+
 """Serialization is the process of making a streamable 
 representation of the data which we can transfer over the network."""
 
@@ -34,5 +36,7 @@ class UserSerializer(serializers.ModelSerializer):
                     username=validated_data['username'])
         user.set_password(validated_data['password'])
         user.save()
+        # Create tokens when a user is created
+        Token.objects.create(user=user)
         return user
 

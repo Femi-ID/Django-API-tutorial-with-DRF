@@ -6,6 +6,7 @@ from .serializers import PollSerializer, ChoiceSerializer, VoteSerializer, UserS
 from rest_framework import status
 from rest_framework import generics
 from rest_framework import viewsets
+from django.contrib.auth import authenticate
 
 # class PollList(APIView):
 #     def get(self, request):
@@ -68,5 +69,20 @@ class PollViewSet(viewsets.ModelViewSet):
 
 
 class UserCreate(generics.CreateAPIView):
+    authentication_classes = ()
+    permission_classes = ()
     serializer_class = UserSerializer
+
+
+class LoginView(APIView):
+    permission_classes = ()
+
+    def post(self, request,):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(username=username, password=password)
+        if user:
+            return Response({"token": user.auth_token.key})
+        else:
+            return Response({"error": "Invalid Credentials"}, status=status.HTTP_400)
 
