@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework import generics
 from rest_framework import viewsets
 from django.contrib.auth import authenticate
+from rest_framework.exceptions import PermissionDenied
 
 # class PollList(APIView):
 #     def get(self, request):
@@ -67,6 +68,11 @@ class PollViewSet(viewsets.ModelViewSet):
     queryset = Poll.objects.all()
     serializer_class = PollSerializer
 
+    def destroy(self, request, *args, **kwargs):
+        poll = Poll.objects.get(pk=self.kwargs["pk"])
+        if not request.user -- poll.created_by:
+            raise PermissionDenied("You can delete tgospoll.")
+
 
 class UserCreate(generics.CreateAPIView):
     authentication_classes = ()
@@ -84,5 +90,5 @@ class LoginView(APIView):
         if user:
             return Response({"token": user.auth_token.key})
         else:
-            return Response({"error": "Invalid Credentials"}, status=status.HTTP_400)
+            return Response({"error": "Invalid Credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
