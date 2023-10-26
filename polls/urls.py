@@ -2,6 +2,7 @@ from django.urls import path
 from .views import polls_list, polls_detail
 from .apiviews import PollList, PollDetail, ChoiceList, CreateVote, PollViewSet, UserCreate, LoginView
 from rest_framework.routers import DefaultRouter
+
 # Another way to create this login endpoint is using obtain_auth_token method provide by DRF
 from rest_framework.authtoken import views
 
@@ -25,7 +26,7 @@ urlpatterns = [
     path('users/', UserCreate.as_view(), name='user_create'),
     path('login/', LoginView.as_view(), name='login'),
 
-    # to create this login endpoint is using obtain_auth_token method provide by DRF
+    # another method to create this login endpoint is using obtain_auth_token method provide by DRF
     path('login/', views.obtain_auth_token, name='login'),
 ]
 

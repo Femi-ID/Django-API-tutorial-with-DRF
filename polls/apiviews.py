@@ -9,12 +9,13 @@ from rest_framework import viewsets
 from django.contrib.auth import authenticate
 from rest_framework.exceptions import PermissionDenied
 
-# class PollList(APIView):
-#     def get(self, request):
-#         polls = Poll.objects.all()
-#         # data = PollSerializer(polls, many=True).data
-#         serializer = PollSerializer(polls, many=True)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class PollList(APIView):
+    def get(self, request):
+        polls = Poll.objects.all()
+        # data = PollSerializer(polls, many=True).data
+        serializer = PollSerializer(polls, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # class PollDetail(APIView):
@@ -25,9 +26,9 @@ from rest_framework.exceptions import PermissionDenied
 #         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class PollList(generics.ListCreateAPIView):
-    queryset = Poll.objects.all()
-    serializer_class = PollSerializer
+# class PollList(generics.ListCreateAPIView):
+#     queryset = Poll.objects.all()
+#     serializer_class = PollSerializer
 
 
 class PollDetail(generics.RetrieveUpdateAPIView):
@@ -44,9 +45,16 @@ class PollDetail(generics.RetrieveUpdateAPIView):
 
 class ChoiceList(generics.ListCreateAPIView):
     def get_queryset(self):
-        queryset = Choice.objects.filter(poll=self.kwargs['id'])
+        queryset = Choice.objects.filter(poll_id=self.kwargs['id'])
         return queryset
     serializer_class = ChoiceSerializer
+
+    def post(self, request, *args, **kwargs):
+        poll = Poll.objects.get(pk=self.kwargs['id'])
+        # To confirm if the current user is the owner of the poll
+        if not request.user == poll.created_by:
+            raise PermissionDenied("You cannot create choice for this poll.")
+        return super().post(request, *args, **kwargs)
 
 
 class CreateVote(APIView):
@@ -57,7 +65,7 @@ class CreateVote(APIView):
         data = {'choice': choice_id, 'poll': id, 'voted_by': voted_by}
         serializer = VoteSerializer(data=data)
         if serializer.is_valid():
-            vote = serializer.save()
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -70,11 +78,13 @@ class PollViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         poll = Poll.objects.get(pk=self.kwargs["pk"])
-        if not request.user -- poll.created_by:
-            raise PermissionDenied("You can delete tgospoll.")
+        if not request.user == poll.created_by:
+            raise PermissionDenied("You cannot delete this poll.")
+        return super().destroy(request, *args, **kwargs)
 
 
 class UserCreate(generics.CreateAPIView):
+    # Note the authentication_classes and permission_classes to exempt UserCreate from global authentication scheme.
     authentication_classes = ()
     permission_classes = ()
     serializer_class = UserSerializer
